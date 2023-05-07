@@ -1,4 +1,4 @@
-import sys
+import sys, os
 import matplotlib.pyplot as plt
 from matplotlib import colors
 from matplotlib.ticker import PercentFormatter
@@ -156,9 +156,10 @@ def main():
 
     plt.title(f'm_m/r_m = {(opt.m_m / opt.r_m):.3f}')
     plt.legend()
-    try:
-        plt.savefig(sys.argv[1])
-    except:
+    
+    if len(sys.argv) == 1:
+        plt.savefig(os.path.join("plots", sys.argv[1]))
+    else:
         print(f"Usage: python conservation.py <out.png>")
     
     # analysis printouts --- give us more exact information
