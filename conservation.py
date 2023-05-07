@@ -10,15 +10,23 @@ G = np.random.default_rng()
 
 class Opt:
     ''' Class for all variables needed for energy consumption calculation'''
-    def __init__(self, S, S_c, r_m, m_m, P_hit):
+    def __init__(self, S):
+
+        # method used (old, ours)
+        self.method = 'ours'
+
+        # variables (set these first)
         self.S = S    		# number of surrogate servers
-        self.S_c = S_c      # % cache size (surrogate servers storage capacity)
+        self.S_c = 0.4      # % cache size (surrogate storage capacity) (0.2, 0.4, 0.5)
+        self.m_m = 10              # modifications to content m (10, 100)
+        self.r_m = 1000              # requests for content m (100, 1000, 10000)
+        self.P_hit = 0.7847          # hit rate for content m (0.7847)
+
+        # constants / dependent variables
         self.M = 1000		# total number of contents in the data set
         self.B = 1e6                # size of each content
         self.t = 6000               # time period of the analysis
         self.n_m = self.S_c * S     # number of replicas for content m
-        self.r_m = r_m              # requests for content m
-        self.m_m = m_m              # modifications to content m
         self.H_A = 3        # hops to fetch content from the same Tier 3 ISP
         self.H_B = 14       # hops to fetch content from the same Tier 2 ISP
         self.H_C = 25               # hops to fetch content from the core network
@@ -32,20 +40,19 @@ class Opt:
         self.E_r = 1.2e-8           # router energy consumption per bit
         self.E_l = 1.48e-9          # link energy consumption per bit
         self.E_sr = 2.81e-7         # server energy consumption per bit
-        self.P_hit = P_hit          # hit rate for content m
 
-def set_opt(S):
-    ''' Collects command line args and returns all needed information'''
-    if len(sys.argv) == 6:
-        S_c = float(sys.argv[1])
-        m_m = int(sys.argv[2])
-        r_m = int(sys.argv[3])
-        P_hit = float(sys.argv[4])
-        opt = Opt(S, S_c, r_m, m_m, P_hit)
-        return opt
-    else:
-        print('Usage: python conservation.py <S_c> <r_m> <m_m> <P_hit>')
-        sys.exit(1)
+# def set_opt(S):
+#     ''' Collects command line args and returns all needed information'''
+#     if len(sys.argv) == 6:
+#         S_c = float(sys.argv[1])
+#         m_m = int(sys.argv[2])
+#         r_m = int(sys.argv[3])
+#         P_hit = float(sys.argv[4])
+#         opt = Opt(S, S_c, r_m, m_m, P_hit)
+#         return opt
+#     else:
+#         print('Usage: python conservation.py <S_c> <r_m> <m_m> <P_hit>')
+#         sys.exit(1)
 
 def E_storage(opt):
     ''' Calculates CDN storage energy consumption, in Joules'''
@@ -87,9 +94,15 @@ def E_tran(opt):
     totJ = 0
 
     # probability of earliest hit occurring at Tier 3, 2, 1 respectively
-    P_A = (opt.S / opt.T_3) * opt.P_hit
-    P_B = sum([hgeom_pmf(i, opt.S, opt.T_3 - opt.S, opt.g_3) * (1 - (1 - opt.P_hit) ** i) for i in range(1, opt.g_3 + 1)]) - P_A
-    P_C = 1 - (P_A + P_B)
+
+    if opt.method == 'ours':
+        P_A = (opt.S / opt.T_3) * opt.P_hit
+        P_B = sum([hgeom_pmf(i, opt.S, opt.T_3 - opt.S, opt.g_3) * (1 - (1 - opt.P_hit) ** i) for i in range(1, opt.g_3 + 1)]) - P_A
+        P_C = 1 - (P_A + P_B)
+    else:
+        P_A = (opt.S * opt.P_hit) / (opt.T_2 * opt.g_3)
+        P_B = (opt.S / opt.T_2) * (1 - 1 / opt.g_3) * opt.P_hit
+        P_C = 1 - (P_A + P_B)
 
     for _ in range(opt.M):
         r_m = G.poisson(opt.r_m)
@@ -109,14 +122,14 @@ def total_energy(opt):
 def main():
 
     # values of surrogate servers to test on
-    S_lst = [1, 2, 3, 5, 8, 10, 20, 50, 100, 500, 1000]
+    # S_lst = [1, 2, 3, 5, 8, 10, 20, 50, 100, 500, 1000]
+    S_lst = [1, 2, 3, 5, 8, 10, 20, 50, 100, 200]
 
     E_tot_lst = []
     E_syncless_lst = []
-    opt = set_opt(S_lst[0])
+    opt = Opt(S_lst[0])
     for S in S_lst:
-        print(S)
-        opt = set_opt(S)
+        opt = Opt(S)
         E_tot = total_energy(opt)
         E_syncless = E_tot - E_synch(opt)
         E_tot_lst.append(E_tot)
@@ -144,9 +157,9 @@ def main():
     plt.title(f'm_m/r_m = {(opt.m_m / opt.r_m):.3f}')
     plt.legend()
     try:
-        plt.savefig(sys.argv[5])
+        plt.savefig(sys.argv[1])
     except:
-        print(f"Usage: python conservation.py <S_c> <r_m> <m_m> <P_hit> <out.png>")
+        print(f"Usage: python conservation.py <out.png>")
     
     # analysis printouts --- give us more exact information
     print(f"E_tot: {E_tot_lst}")
