@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2023.1.25)  6 MAY 2023 18:54
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2023.1.25)  6 MAY 2023 22:13
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -726,7 +726,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `zplm' (encoding: OT1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
-<tier.png, id=16, 812.03375pt x 716.6775pt>
+<tier.png, id=32, 812.03375pt x 716.6775pt>
 File: tier.png Graphic file (type png)
 <use tier.png>
 Package pdftex.def Info: tier.png  used on input line 53.
@@ -734,27 +734,45 @@ Package pdftex.def Info: tier.png  used on input line 53.
  [1{/usr/local/texlive/2022/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
 
 
+ <./tier.png>]
+<zipf.png, id=44, 652.4375pt x 489.83pt>
+File: zipf.png Graphic file (type png)
+<use zipf.png>
+Package pdftex.def Info: zipf.png  used on input line 92.
+(pdftex.def)             Requested size: 230.46748pt x 173.02759pt.
+<pareto.png, id=45, 652.4375pt x 436.63126pt>
+File: pareto.png Graphic file (type png)
+<use pareto.png>
+Package pdftex.def Info: pareto.png  used on input line 117.
+(pdftex.def)             Requested size: 230.46748pt x 154.23566pt.
+ [2 <./zipf.png> <./pareto.png>]
+<bimodal.png, id=58, 361.68459pt x 204.43042pt>
+File: bimodal.png Graphic file (type png)
+<use bimodal.png>
+Package pdftex.def Info: bimodal.png  used on input line 128.
+(pdftex.def)             Requested size: 230.46748pt x 130.26729pt.
+ [3
 
- <./tier.png>] (./template.aux)
+ <./bimodal.png>] (./template.aux)
 Package rerunfilecheck Info: File `template.out' has not changed.
-(rerunfilecheck)             Checksum: EE43647210640D4987726BBB4589898D;502.
+(rerunfilecheck)             Checksum: 8BB40A186596D39FC95F0161C2C17642;1394.
 Package logreq Info: Writing requests to 'template.run.xml'.
 \openout1 = `template.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 22496 strings out of 478268
- 391573 string characters out of 5846347
- 1134315 words of memory out of 5000000
- 40323 multiletter control sequences out of 15000+600000
- 503085 words of font info for 128 fonts, out of 8000000 for 9000
+ 22768 strings out of 478268
+ 394504 string characters out of 5846347
+ 1146262 words of memory out of 5000000
+ 40390 multiletter control sequences out of 15000+600000
+ 529852 words of font info for 290 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,8n,82p,1046b,801s stack positions out of 10000i,1000n,20000p,200000b,200000s
-{/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/texlive/2022/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on template.pdf (1 page, 116183 bytes).
+ 75i,11n,82p,1046b,801s stack positions out of 10000i,1000n,20000p,200000b,200000s
+{/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/mathpazo/fplmr.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/mathpazo/fplmri.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/urw/palatino/uplb8a.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/urw/palatino/uplr8a.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/urw/palatino/uplri8a.pfb>
+Output written on template.pdf (3 pages, 264459 bytes).
 PDF statistics:
- 46 PDF objects out of 1000 (max. 8388607)
- 34 compressed objects within 1 object stream
- 6 named destinations out of 1000 (max. 500000)
- 58910 words of extra memory for PDF output out of 61914 (max. 10000000)
+ 106 PDF objects out of 1000 (max. 8388607)
+ 77 compressed objects within 1 object stream
+ 15 named destinations out of 1000 (max. 500000)
+ 85581 words of extra memory for PDF output out of 89155 (max. 10000000)
 
