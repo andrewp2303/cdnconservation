@@ -28,6 +28,8 @@
 	CS 262: Introduction to Distributed Systems \\
 }
 
+\date{May 7, 2023}
+
 
 %----------------------------------------------------------------------------------------
 \newtheorem*{remark}{Remark}
@@ -40,15 +42,15 @@
 %----------------------------------------------------------------------------------------
 
 \section{1. Introduction}
-Over the past semester, we've learned about the fundamentals of distributed systems, their implementations, and their uses. We were particularly interested in the idea of replication as it relates to  For this paper, we sought to find an application of the replication that we learned that went beyond fault-tolerance, and provided additional benefits to the companies or individuals implementing them. with this project, these benefits are twofold — we show that companies implementing CDNs for content delivery are not only able to deliver content faster (the primary goal) but also more energy-efficiently. in a time where the climate is clearly becoming more at risk and legislation is also beginning to respond, we decided that CDNs were a great place to make advances as to their energy efficiency”
+Over the past semester, we've learned about the fundamentals of distributed systems, their implementations, and their uses. We were particularly interested exploring replication deeper, since it's so fundamental to the notion of what a distributed system is. For this paper specifically, we sought to find an application of the replication we learned that went beyond fault-tolerance, and provided additional benefits to the companies or individuals implementing them. One such application is content delivery networks (CDNs) --- distributed systems whose alternative benefits are twofold. We show that companies implementing CDNs for content delivery are not only able to deliver content faster (the primary goal) but also more energy-efficiently. In a time where the climate is clearly becoming more at risk yet major content distribution platforms are constantly growing, CDNs are a clear area where advancements in energy efficiency can (and should) be made.
 
-Before we make any 
+CDNs are an incredibly common data distribution tool that are used by the vast majority of global online platforms today. These are typically implemented as a distributed system in which 
 
-In this paper, we explore several gaps in the literature as to energy efficiency in CDNs, and make three key contributions:
+In this paper, we explore several gaps in the literature as to energy efficiency in CDNs, making three key contributions along the way:
 \begin{enumerate}
     \item We more rigorously examine the choice of various probability distributions and parameters as cache policies for CDNs, by relating them to the various content categories available online today.
-    \item We redefine an existing model and constraints to be more flexible and closely aligned with the needs and consumption of modern CDNs.
-    \item We provide a strategy and code for modeling an appropriate amount of surrogate servers that should be used for a CDN with given characteristics --- namely, we do this by finding a \textit{crossover point} where a CDN's overall energy consumption begins to increase.
+    \item We redefine an existing model and its constraints to be more flexible and closely aligned with the energy consumption of modern CDNs.
+    \item We provide a strategy and code for modeling an appropriate amount of surrogate servers that should be used for a CDN with given characteristics --- namely, we do this by finding a \textit{crossover point} where a CDN's normalized energy consumption is at its minimum.
 \end{enumerate}
 % brief explanation of what CDNs are and what they are typically used for
 % the novel contributions of this paper are: A. fitting to different distributions B. new probability calculations C. a way to calculate
@@ -63,7 +65,7 @@ Unlike \cite{osmanthesis} and \cite{ulIslam2012}, paper \cite{biancoCDNs2017} as
 
 \subsection{2.1. Network Topology}
 
-We represent a CDN as a \textit{primary} server, storing the entire data set, connected to several \textit{surrogate} servers, each of which store a fixed-size randomized subset of the primary's contents. The idea is that surrogates sit on the network edge, closer to end users — minimizing cost, latency, and energy usage. 
+We represent a CDN as a \textit{primary} server, storing the entire data set, connected to several \textit{surrogate} servers, each of which store an equally-sized randomized subset of the primary's contents (note that the randomization is not necessarily uniform). The idea is that surrogates sit on the network edge, closer to end users — minimizing cost, latency, and energy usage. 
 
 Both the primary and surrogates sit in the internet, which at large can be modeled as a three-tier network of ISPs (Internet Service Providers). Each tier can be described as follows:
 \begin{enumerate}
@@ -126,7 +128,7 @@ The second approach is popularity-based, and requires as a prerequisite that the
 	\begin{center}
 		\includegraphics[width=8.1cm]{zipf.png}
 	\end{center}
-	\caption{A graph of the Zipf distribution CDF with support $k\in\{1, 2, \ldots, 10 \}$ for multiple parameters $s=\alpha \in \{1,2,3,4\}$}.
+	\caption{A graph of the Zipf distribution CDF with support $k\in\{1, 2, \ldots, 10 \}$ for multiple parameters $s=\alpha \in \{1,2,3,4\}$.}
 \end{figure}
 
 \begin{remark}
@@ -137,9 +139,27 @@ The second approach is popularity-based, and requires as a prerequisite that the
 
 The hit probability is the probability that a surrogate server incurs a cache hit. For the uniform approach, the hit probability is trivial: it is simply the size of the surrogate cache as a fraction of the primary storage size. By \cite{749260} and basic probability, the hit probability for the Zipf approach is as follows:
 
-\[ P_{hit}(\alpha, c, n) = \sum_{i=1}^{cn} \frac{\left( \sum_{k=1}^{n} \frac{1}{k^\alpha}\right)^{-1}}{i^\alpha} = \frac{H_{}}{} \]
+\[ P_{hit}(\alpha, S_C, M) = \sum_{i=1}^{MS_C} \frac{\left( \sum_{k=1}^{M} \frac{1}{k^\alpha}\right)^{-1}}{i^\alpha} = \frac{H_{MS_C, \alpha}}{H_{M,\alpha}} \]
 
-\subsection{2.4  Modeling Energy Consumption}
+Where $\alpha$ is the Zipf parameter, $M$ is the total number of documents on the primary,  $S_C$ is the surrogate size as a fraction of the primary, and $H_{a,b}$ is the $a$th generalized harmonic number of order $b$. Notably, $P_{hit}(\alpha, S_C, M)$ is equivalent to the CDF of Zipf($\alpha$, $M$) as a function of $MS_C$, as shown above (the final term is the Zipf CDF). Full parameters for our model are outlined below, but note that 
+\[P_{hit}(0.8, 0.4, 1000) \approx 0.7847\] 
+which we use in our model. This differs from $P_{hit} = 0.82$ as used in \cite{biancoCDNs2017}, which we were unable to replicate, even with their methodology. However, the probabilities are similar enough not to cause any qualitative differences. Interestingly,
+\[ \lim_{M\to\infty} P_{hit}(0.8, 0.4, M) \approx 0.8326\]
+which suggests that the $P_{hit} = 0.82$ from \cite{biancoCDNs2017} may have been calculated for an arbitrarily larger $M$ than was reported.
+
+\subsection{2.4  Additional Assumptions}
+Note the following assumptions that have not yet already been stated:
+\begin{enumerate}
+    \item Contents are of the same fixed size of $B$ bits.
+    \item User requests must originate in tier three ISPs.
+    \item Each group of $g_3$ tier three ISPs maps to one tier two ISP, so there are $T_2=\frac{T_3}{g_3}$ tier two ISPs..
+    \item User requests are directed to the closest surrogate server containing their requested content, limited to the scope of the originating tier two ISP. If no such surrogate exists, the primary handles the request.
+    \item When content is modified the primary instantly propagates it to surrogate servers based on the probability that the surrogate server hosts that content, per the cache policies outlined earlier.
+    \item Requests for each content $m$ generate according to a Poisson distribution with parameter $r_m$.
+    \item Modifications of each content $m$ generate according to a Poisson distribution with parameter $m_m$.
+\end{enumerate}
+
+Note Table 1, which summarizes additional parameters that define our model.
 \begin{center}
 \begin{table}[h]
 \scriptsize
@@ -203,13 +223,13 @@ The hit probability is the probability that a surrogate server incurs a cache hi
       + P_C\sum_mBr_m[E_r(H^C_{sd} + 1) + E_l(H^C_{sd})] \\
 \end{multline*}
 
-\subsection{2.5  Results}
-\begin{figure}[h]
+\subsection{2.5 Results}
+\begin{figure}[!hbt]
 	\begin{center}
-		\includegraphics[width=8.1cm]{plots/sc40ratio0.1zipf.png}
+		\includegraphics[width=8.1cm]{plots/sc40ratio0.01uniform.png}
             \includegraphics[width=8.1cm]{plots/sc40ratio0.01zipf.png}
 	\end{center}
-	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a Zipf cache policy, with a modify/request ratio of $0.1$ (top) and $0.01$ (bottom), and a cache rate of $40\%$.}	
+	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a Uniform (top) and popularity-based (bottom) cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}	
 \end{figure}
 
 
@@ -311,26 +331,37 @@ Then, in order to formulate $P_B$, we summate over the amount of surrogates in a
 \[P_B = \sum^{g_3}_{i=1}\left[\frac{\binom{S}{i}\binom{T_3-S}{g_3 - i}}{\binom{T_3}{g_3}} \cdot (1 - (1 - P_{hit})^i)\right] - P_A\]
 Finally, $P_C$ accounts for the scenario that neither of the above occurred, and thus it is calculated as follows:
 \[ P_C = 1 - (P_A + P_B)\]
-Although this has ramifications on $E_{tx}$ as described above, our model otherwise remains unchanged. However, this opens up a new range of possible values for $S$, which is now constrained by $0 \leq S \leq T_3$ --- in 4.3, we shall see that this expanded range proves insightful.
+Although this has ramifications on $E_{tx}$ as described above, our model otherwise remains unchanged. However, this opens up a new range of possible values for $S$, which is now constrained by $0 \leq S \leq T_3$ --- in 4.3, we shall see that this expanded range proves to be insightful.
 
 \subsection{4.2 Incorporating Idle Energy Costs}
-Another assumption made was that servers only incurred an energy cost whenever actively processing a client's request. Although for larger CDNs this may effectively be true (since they are constantly performing computations),  we believe it is important to include an idle energy, even if it is minimal relative to the other forms of energy consumption in a CDN. This incorporates an element of \cite{ulIslam2012}, which emphasizes the use of idle power as a potentially crucial aspect of CDN server utilization and energy consumption.
+Another assumption made was that servers only incur an energy cost whenever actively processing a client's request. Although for larger CDNs this may effectively be true (since they are constantly performing computations),  we believe it is important to include an idle energy, even if it is minimal relative to the other forms of energy consumption in a CDN. This incorporates \cite{ulIslam2012}, which emphasizes the use of idle power as a potentially crucial aspect of CDN server utilization and energy consumption.
 
-As a result, we shall also slight
+As a result, we shall accordingly make a slight modification to $E_{server}$, the total server costs of our CDN, in order to allow for a variable idle energy usage per surrogate server. We set $P_{idle}$ to a minimal value of $0.1W$ per server, taking the other model parameters into account while assuming high server utilization and optimization, but this can be changed for experimentation as needed. This allows us to formulate the following new formula:
+\[E_{server} = S\cdot P_{idle}\cdot t + \sum_mBr_mP_{sr}\]
 \subsection{4.3 Results}
-After incorporating the new modeling of $E_{tx}$ using $P_A, P_B, P_C$, and accounting for idle energy as described in 4.2, we can observe some new trends in our data that differ from what we find in 2.5. 
+After incorporating the new modeling of $E_{tx}$ using $P_A, P_B, P_C$, and accounting for idle energy as described in 4.2, we can observe some new trends in our data that differ from what we find in 2.5. Firstly, we examine the values of $S$ as $\{2^0, 2^1, \ldots, 2^8 = 256\}$. In the graphs that do not include it, we still checked higher values of $S$ up to 1000 to verify end behavior, however the crossover point was found far sooner. 
+\begin{figure}[!hbt]
+	\begin{center}
+		\includegraphics[width=8.1cm]{plots/new0.01.png}
+            \includegraphics[width=8.1cm]{plots/new0.001.png}
+	\end{center}
+	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a popularity-based cache policy, with a modify/request ratio of $0.01$ (top) or 0.001 (bottom) and a cache rate of $40\%$.}	
+\end{figure}
 
 
 \section{5. Conclusions}
 
-Before developing our own adaptations and models for energy usage in CDNs, we explored models and methods that have already been explored. For one, we found work by ul Islam \& Pierson that details surrogate server energy utilization based on a variety of factors, but this model was less applicable to modern distributed systems, since it only considers requestsmade and not modifications made \cite{ulIslam2012}. We aimed
+Before developing our own adaptations and models for energy usage in CDNs, we explored models and methods that have already been explored. For one, we found work by ul Islam \& Pierson that details surrogate server energy utilization based on a variety of factors, but this model was less applicable to modern distributed systems, since it only considers requests made and not modifications made \cite{ulIslam2012}. We aimed
 \begin{enumerate}
     \item Cite Bianco et al. heavily, noting other papers such as \href{https://link.springer.com/chapter/10.1007/978-3-642-32606-6\_6}{this link} as alternative methods but stating that we found this model to be the most recent, and also the most compelling --- we just want to make some slight extensions and modifications to it in the form of things we found not entirely satisfactory and also things that do not age well with current content formats and distribution rates
     \item note that we were able to replicate the results of Bianco et al., except that we found a different P\_hit than they did (0.7847 instead of 0.82) by using the source they cited. The results remained qualitatively the same but quantitatively slightly different -- we continue using these strategies further
     \item Speak a little bit to the code and
 \end{enumerate}
 
-\section{Future Work}
+\section{6. Future Work}
+Although we have made significant improvements to existing models of energy consumption in CDNs, we recognize that our final model still provides a lack of clear strategic instruction, while also making numerous assumptions. These steps are intentional --- it is impossible to form a general analysis of CDNs, since they are widely used for services of varying size, data access patterns, and energy usage. As a result, we hope to have provided a more flexible model that can be used to guide initial paths to CDN energy conservation, based on generally-accepted cache policies and conservative model parameters. 
+
+One future area of work that could be synthesized productively with what we have presented is multi-integer linear programming (MILP). This can be used to 
 
 % andrew, section where we talk about our confusion with why their model only goes up to 
 % \subsection{x. Several surrogates within T2 ISPs}
