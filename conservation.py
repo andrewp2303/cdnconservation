@@ -25,7 +25,7 @@ class Opt:
         self.S = S    		# number of surrogate servers
         self.S_c = 0.4      # % cache size (surrogate storage capacity) (0.2, 0.4, 0.5)
         self.m_m = 100              # modifications to content m (10, 100)
-        self.r_m = 100000              # requests for content m (100, 1000, 10000)
+        self.r_m = 10000              # requests for content m (100, 1000, 10000)
         self.P_hit = 0.7847          # hit rate for content m (0.7847)
 
         # constants / dependent variables
@@ -114,6 +114,12 @@ def total_energy(opt):
     ''' Calculates the energy consumption of the network, in Joules'''
     return E_server(opt) + E_storage(opt) + E_synch(opt) + E_tran(opt)
 
+def pareto_P_hit(alpha, S_c, M):
+    ''' Calculates the Pareto hit rate given the values '''
+    num = 1 - 1/((S_c * M) ** alpha)
+    denom = 1 - 1/((M) ** (1 - alpha))
+    return num/denom
+
 def main():
 
     # values of surrogate servers to test on
@@ -153,14 +159,58 @@ def main():
     plt.title(f'm_m/r_m = {(opt.m_m / opt.r_m):.3f}')
     plt.legend()
 
-    if len(sys.argv) == 2:
-        plt.savefig(os.path.join("plots", sys.argv[1]))
-    else:
-        print(f"Usage: python conservation.py <out.png>")
+    plt.savefig(os.path.join("plots", sys.argv[1]))
     
     # analysis printouts --- give us more exact information
     print(f"E_tot: {E_tot_lst}")
     print(f"E_tot-synch: {E_syncless_lst}")
 
+def pareto_plot():
+
+    # values of alpha to test on (range can be changed)
+    alpha_lst = np.arange(0, 5, 0.1)
+
+    # crossover point given the new model, 40% S_c, M=1000, m/r=0.01
+    S = 32
+
+    E_tot_lst = []
+
+    opt = Opt(S)
+    for alpha in alpha_lst:
+        P_hit = pareto_P_hit(alpha, opt.S, opt.M)
+        print(P_hit)
+        opt.P_hit = P_hit
+        E_tot = total_energy(opt)
+        E_tot_lst.append(E_tot)
+
+    # normalize both E_tot and E_tot-synch lists
+    initE = E_tot_lst[0]
+    E_tot_norm = [E_tot_lst[i] / initE for i in range(len(E_tot_lst))]
+
+    plt.plot(alpha_lst, E_tot_norm, label = "E_tot", marker="x")
+
+    plt.xlabel('Pareto α parameter')
+    plt.ylabel('Normalized Energy Consumption')
+
+    # customize the bounds of the x, y axes, and also where ticks are placed
+    # plt.xlim((1, 20))
+    # plt.ylim((0.9,1.1))
+    # plt.xticks(S_lst)
+    # plt.yticks([0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4])
+    # plt.yticks([0.9, 0.95, 1.0, 1.05, 1.1])
+
+    plt.title(f'Pareto α vs. total energy consumption')
+    plt.legend()
+
+    plt.savefig(os.path.join("plots", sys.argv[1]))
+    
+    # analysis printouts --- give us more exact information
+    print(f"E_tot: {E_tot_lst}")
+
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) == 2:
+        main()
+    elif len(sys.argv) == 3:
+        pareto_plot()
+    else:
+        print(f"Usage: python conservation.py <out.png> [optional: pareto]")
