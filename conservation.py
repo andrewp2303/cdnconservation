@@ -116,8 +116,8 @@ def total_energy(opt):
 
 def pareto_P_hit(alpha, S_c, M):
     ''' Calculates the Pareto hit rate given the values '''
-    num = 1 - 1/((S_c * M) ** alpha)
-    denom = 1 - 1/((M) ** (1 - alpha))
+    num = 1 - (1/(S_c * M)) ** alpha
+    denom = 1 - (1/M) ** (alpha)
     return num/denom
 
 def main():
@@ -168,7 +168,7 @@ def main():
 def pareto_plot():
 
     # values of alpha to test on (range can be changed)
-    alpha_lst = np.arange(0, 5, 0.1)
+    alpha_lst = np.arange(0.1, 1, 0.1)
 
     # crossover point given the new model, 40% S_c, M=1000, m/r=0.01
     S = 32
@@ -177,7 +177,7 @@ def pareto_plot():
 
     opt = Opt(S)
     for alpha in alpha_lst:
-        P_hit = pareto_P_hit(alpha, opt.S, opt.M)
+        P_hit = pareto_P_hit(alpha, opt.S_c, opt.M)
         print(P_hit)
         opt.P_hit = P_hit
         E_tot = total_energy(opt)
@@ -188,6 +188,8 @@ def pareto_plot():
     E_tot_norm = [E_tot_lst[i] / initE for i in range(len(E_tot_lst))]
 
     plt.plot(alpha_lst, E_tot_norm, label = "E_tot", marker="x")
+    # plt.plot(alpha_lst, E_tot_lst, label = "E_tot", marker="x")
+
 
     plt.xlabel('Pareto α parameter')
     plt.ylabel('Normalized Energy Consumption')
