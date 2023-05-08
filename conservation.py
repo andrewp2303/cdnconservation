@@ -174,8 +174,9 @@ def pareto_plot():
     S = 32
 
     E_tot_lst = []
-
     opt = Opt(S)
+
+    # iterate through alpha values and calculate E_tot accordingly
     for alpha in alpha_lst:
         P_hit = pareto_P_hit(alpha, opt.S_c, opt.M)
         print(P_hit)
@@ -193,13 +194,6 @@ def pareto_plot():
 
     plt.xlabel('Pareto α parameter')
     plt.ylabel('Normalized Energy Consumption')
-
-    # customize the bounds of the x, y axes, and also where ticks are placed
-    # plt.xlim((1, 20))
-    # plt.ylim((0.9,1.1))
-    # plt.xticks(S_lst)
-    # plt.yticks([0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4])
-    # plt.yticks([0.9, 0.95, 1.0, 1.05, 1.1])
 
     plt.title(f'Pareto α vs. total energy consumption')
     plt.legend()
