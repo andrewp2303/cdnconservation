@@ -43,36 +43,36 @@
 
 \section{1. Introduction}
 
-Throughout the semester, we explored distributed system fundamentals, implementations, and use cases. One area that especially interested us was replication, since it is so fundamental to the performance and reliability of a variety of distributed systems. In our final project, we wanted to explore the various applications of replication beyond just fault-tolerance for a client-server chat application.
+Throughout the semester, we explored distributed systems fundamentals, implementations, and use cases. One area that especially interested us was replication, since it is so fundamental to the performance and reliability of a variety of distributed systems. In our final project, we wanted to explore an application of replication beyond just fault-tolerance for a client-server chat application.
 
-Content delivery networks (CDNs) are a type of distributed system that utilizes caching techniques to improve the speed and reliability of content delivery. CDNs strategically place servers in different locations around the world, bringing content closer to users and minimizing the distance between clients and servers.
+One such application is content delivery networks (CDNs) --- a type of distributed system that utilizes caching to improve the speed and reliability of content delivery. CDNs strategically place servers in different locations around the world, bringing content closer to users and minimizing the distance between clients and servers.
 
-When a user requests content from a website that uses a CDN, the request is automatically routed to the nearest server in the network, which serves a cached copy of the content. By reducing the distance that data needs to travel over the network and optimizing content delivery, CDNs can help to minimize energy consumption and reduce the carbon footprint of content distribution platforms.
+When a user requests content from a website that uses a CDN, the request is automatically routed to the nearest server in the network, which serves a cached copy of the content. By reducing the distance that data needs to travel over the network, CDNs can help minimize energy consumption and even reduce the carbon footprint of content distribution platforms.
 
 CDNs are widely used by online platforms, serving trillions of requests globally. Therefore, even minor optimizations in CDN modeling can have significant ramifications for energy consumption. In this paper, we identify gaps in the literature regarding the energy efficiency of CDNs and make three significant contributions by doing the following:
 
 \begin{enumerate}
-    \item More rigorously examining the choice of cache policies for CDNs, relating them to the various content categories available online today.
     \item Redefining an existing model and its constraints to be more closely aligned with the energy consumption of modern CDNs.
     \item Providing a strategy along with code to model the optimal number of surrogate servers for a CDN with specific characteristics, identifying the "crossover point" where energy consumption is minimized.
+    \item More rigorously examining the choice of cache policies for CDNs, relating them to the various content categories available online today.
 \end{enumerate}
 
-% brief explanation of what CDNs are and what they are typically used for
-% the novel contributions of this paper are: A. fitting to different distributions B. new probability calculations C. a way to calculate
+Our code can be found \href{https://github.com/andrewp2303/cdnconservation}{\textcolor{blue}{here}}.
+
 
 \section{2. Existing Approaches}
 
-Several recent papers cover the topic of energy consumption in CDNs. Paper \cite{ulIslam2012} proposes a new energy consumption model for CDN surrogates, compares Uniform and Zipfian client redirection policies, and simulates results via a CDNSim testbed \cite{cdnsim}. Critically, the model introduced in \cite{ulIslam2012} does not incorporate network synchronization or transmission costs into it's energy model, opting to instead dismiss them. 
+Several recent papers cover the topic of energy consumption in CDNs. Paper \cite{ulIslam2012} proposes a new energy consumption model for CDN surrogates, compares Uniform and Zipfian redirection policies, and simulates results via a CDNSim testbed \cite{cdnsim}. Critically, the model introduced in \cite{ulIslam2012} does not incorporate network synchronization or transmission costs into its energy model, opting to instead dismiss them. 
 
 Paper \cite{osmanthesis} does account for costs such as that of transmission energy, but also has a general focus on determining optimal CDN cache sizes (both fixed and variable) via a proposed mixed-integer linear programming model. Notably, \cite{osmanthesis} does not have an apparent focus on optimizing CDN surrogate quantities at scale.
 
-Unlike \cite{osmanthesis} and \cite{ulIslam2012}, paper \cite{biancoCDNs2017} assumes that CDN cache sizes are a constant factor of the primary in order to analyze transmission, synchronization, and other costs in-depth. We were able to closely replicate the findings of \cite{biancoCDNs2017}, with small quantitative differences but identical qualitative conclusions. Their model — which is the basis for our proposed model — aligns closely with the reality of the internet. As a result, it's key to understand their approach, which is outlined in the remainder of this section.
+Unlike \cite{osmanthesis} and \cite{ulIslam2012}, paper \cite{biancoCDNs2017} assumes that CDN cache sizes are a constant factor of the primary in order to analyze transmission, synchronization, and other costs in-depth. We were able to closely replicate the findings of \cite{biancoCDNs2017}, with small quantitative differences but identical qualitative conclusions. Their model — which is the basis for our proposed model — aligns closely with the reality of the internet. As a result, it's key to understand this paper's approach, which is outlined in the remainder of this section.
 
 \subsection{2.1. Network Topology}
 
-We represent a CDN as a \textit{primary} server, storing the entire data set, connected to several \textit{surrogate} servers, each of which store an equally-sized randomized subset of the primary's contents (note that the randomization is not necessarily uniform). The idea is that surrogates sit on the network edge, closer to end users — minimizing cost, latency, and energy usage. 
+We represent a CDN as a \textit{primary} server, storing the entire data set, connected to several \textit{surrogate} servers, each of which store an equally-sized randomized subset of the primary's contents (note that the randomization is not necessarily uniform). We found this very similar to the primary-backup replication model presented during lecture and in our reading by Budhiraja et al. \cite{BudhirajaNavinPPLB}. The idea is that surrogates sit on the network edge, closer to end users — minimizing cost, latency, and energy usage. 
 
-Both the primary and surrogates sit in the internet, which at large can be modeled as a three-tier network of ISPs (Internet Service Providers). Each tier can be described as follows:
+Both the primary and surrogates sit in the internet, which can be modeled at large as a three-tier network of ISPs (Internet Service Providers). Each tier can be described as follows:
 \begin{enumerate}
     \item Tier one ISPs have global reach and are at the top of the hierarchy.
     \item Tier two ISPs are typically regional or country-based, and are responsible for connecting between tier one and tier three ISPs.
@@ -225,7 +225,7 @@ Next, we have $E_{synch}$, the energy required to keep all of the surrogate serv
 \[E_{synch} = \sum_mBm_mn_m[E_r(H_{ps} + 1) + E_l(H_{ps})]\]
 Finally, in order to calculate our transmission energy, we first need to consider the three distinct cases in which content is transmitted. First is the case $A$ where a client's requested content is found on a surrogate in the same Tier 3 ISP, with probability:
 \[P_A = \frac{S}{T_2} \cdot \frac{1}{g_3} \cdot P_{hit}\]
-Then in case $B$, case $A$ is not satisfied but there is a surrogate in the same Tier 2 ISP that contains the desired content:
+Then, case $B$ entails that case $A$ was not satisfied, but that there is a surrogate in the same Tier 2 ISP that contains the desired content:
 \[P_B = \frac{S}{T_2} \cdot \left(1 - \frac{1}{g_3}\right) \cdot P_{hit}\]
 Finally, in case $C$, the core network (e.g. the primary server) is the closest server containing the requested content, and thus the data needs to be transmitted from the primary server all the way to the client:
 \[P_C = 1 - (P_A + P_B)\]
@@ -237,30 +237,90 @@ Given these probabilities, we calculate a combined transmission energy, based on
 \end{multline*}
 
 \subsection{2.6 Results and Discussion}
+Note the results in figures ~\ref{s2uniform0.01} and ~\ref{s2zipf0.01}. In figure \ref{s2uniform0.01}, we see that $E_{tot}$ has a positive slope, implying that scaling the number of surrogates in the CDN indeed increases our energy impact. Such a graph might suggest that a network administrator should not scale their CDN in order to optimize for energy performance.
+
+However, the results in figure ~\ref{s2zipf0.01} do not yield as-useful real-world recommendations. For one, we see that the slope of $E_{tot}$ is negative, implying that scaling the number of surrogates in the CDN indeed decreases our energy impact. However, from both \cite{biancoCDNs2017} and our own replication of their results, it is not clear how this function behaves asymptotically for large $S$. 
+
+One can extend the preexisting analysis up to right below $S = T_2$, but then we hit the constraint of $S < T_2$ as defined originally in \cite{biancoCDNs2017}. As such, it is completely unclear from a real-world perspective how the energy impact of CDNs scales for $S > T_2$, a very realistic scenario considering the fact that large CDNs have thousands of servers whereas tier two ISPs only occur on a regional or state basis. As such, the model proposed in \cite{biancoCDNs2017} is fundamentally flawed. Our new model, proposed in the next section, fixes this fundamental flaw, allowing us to analyze the energy impact of CDNs at any scale.
+
 \begin{figure}[!hbt]
 	\begin{center}
 		\includegraphics[width=8.1cm]{plots/sc40ratio0.01uniform.png}
 	\end{center}
 	\caption{$E_{tot}$ and $E_{tot - synch}$ for a Uniform cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}	
+    \label{s2uniform0.01}
 \end{figure}
 \begin{figure}[!hbt]
 	\begin{center}
 		\includegraphics[width=8.1cm]{plots/sc40ratio0.01zipf.png}
 	\end{center}
-	\caption{$E_{tot}$ and $E_{tot - synch}$ for popularity-based cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}	
+	\caption{$E_{tot}$ and $E_{tot - synch}$ for popularity-based cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}
+    \label{s2zipf0.01}
 \end{figure}
 
-\section{3. A Better Cache Policy}
 
-While \cite{biancoCDNs2017} asserts that Zipf with $\alpha = 0.8$ is an accurate caching policy for a variety of multimedia, content distributions on modern platforms like Tik Tok, Spotify, and YouTube all have different viewership patterns. This suggests that in some cases Zipf with $\alpha = 0.8$ may not be the best caching policy and alternate distributions could offer a better framework for CDN caching. 
+\section{3. Adaptations to Larger CDNs}
+So far, the CDN energy consumption model we reference has been very useful for observing how to seek greener content delivery, alongside how using various cache policies affects energy usage. However, while working with the model, we also found some of the assumptions and constraints in \cite{biancoCDNs2017} to be unintuitive. In this section, we first examine the constraint on the amount of surrogates in our model, and then examine an important missing factor in our energy consumption calculations.
 
-Since platforms like Tik Tok and Spotify contain more items with high popularity and more items that spontaneously change in popularity by going viral alright, the distribution of popularity may be less skewed than Zipf with $\alpha = 0.8$ might suggest. Therefore, using the Zipf distribution to determine cache allocation especially for short-form video content may not be as effective as for other types of multimedia. Additionally, since short-form video content requires larger amounts of storage space, efficient cache allocation modeling is even more crucial to ensure optimal performance of a CDN. 
+\subsection{3.1 Relaxing Surrogate Constraints}
+Our above model makes the assumption that $S < T_2$ --- that there are fewer CDN surrogate servers than Tier 2 ISPs, and furthermore that there exists at most one surrogate per Tier 2 ISP. Reminding ourselves that in a realistic Internet hierarchy, Tier 2 ISPs are regional and national providers that operate both closer to clients than Tier 1 ISPs but further than Tier 3 ISPs, this assumption is unrealistic. If a large provider (e.g. TikTok or Spotify) wanted to rapidly deliver content, it would obviously want to have surrogates at as many Tier 3 ISPs as possible, regardless of whether they are connected to the same Tier 2 ISP. 
+
+Furthermore, recalling our goal of optimizing CDN energy consumption, the results we found in previous sections seem to illustrate that adding surrogate servers consistently contributes to decreased normalized energy consumption. We realized this clearly couldn't be true, both in our model and in reality --- once there exists a surrogate in each Tier 3 ISP, there is no way to lower the amount of hops from a client to a surrogate. The only potential benefit of having several surrogates in a single Tier 3 ISP is redundancy, which we do not seek here because surrogates only contain part of the existing content, and our primary server is assumed to be stable. 
+
+Given these two findings, we sought a way to update our constraint such that $S \leq T_3$ instead --- this follows from the fact that it could potentially be useful, and even energy-efficient, to continue adding surrogates until there is a surrogate at each Tier 3 ISP. As a result, we restructured our transmission energy consumption in order to allow for this new constraint. Namely, the probabilities $P_A, P_B, P_C$ of a client's closest hit being at a Tier 3, 2, or 1 ISP must be changed accordingly. 
+
+For the purpose of interpretability, we shall assume that new surrogates will be uniformly randomly assigned to a Tier 3 ISP. Of course, this is not an entirely accurate assumption to make, since some Tier 3 ISPs have far higher priority than others, such as ones in more in-demand geographic areas (New York instead of Montana) or ones with a greater service population. However, our model already makes similar implicit assumptions, such as the fact that clients and surrogates are evenly geographically distributed. Furthermore, our model focuses on differentiating costs \textit{between} ISP tiers, and not \textit{within} them, so we shall leave this part to Future Work.
+
+First, we calculate $P_A$ --- the probability that when a client requests a given piece of content, there exists a surrogate in the same Tier 3 ISP and it has that content. Here, we simply multiply the probability of a surrogate existing in that Tier 3 ISP ($\frac{S}{T_3}$ by uniformity) and the probability of a cache hit ($P_{hit}$, as calculated earlier). This gives us:
+\[P_A = \frac{S}{T_3} \cdot P_{hit}\]
+Next, we calculate $P_B$ --- the probability that the content could not be retrieved from a surrogate in the same Tier 3 ISP, but was able to be retrieved from a surrogate in the same Tier 2 ISP. First, we define a random variable for the amount of surrogates in a given Tier 2 ISP --- based on uniform selection without replacement, this gives us:
+\[S_2 \sim \textrm{HGeom}(S, T_3-s, g_3)\]
+Then, in order to formulate $P_B$, we summate over the amount of surrogates in a Tier 2 ISP where it is possible that a hit occurs --- this is 1 to $g_3$, since there cannot be a hit with 0 surrogates and there can also be at most 1 surrogate per Tier 3 ISP. Next, at each value in the summation, we calculate the probability of a hit for a Tier 2 ISP with that many surrogates --- this is $(1 - (1 - P_{hit})^i)$, since $(1 - P_{hit})^i$ defines the probability of none of the $i$ surrogates containing the requested content. Finally, we note that this summation includes scenario $A$, so we incorporate this to address overcounting:
+\[P_B = \sum^{g_3}_{i=1}[P(S_2 = i) \cdot (1 - (1 - P_{hit})^i)] - P_A\]
+\[P_B = \sum^{g_3}_{i=1}\left[\frac{\binom{S}{i}\binom{T_3-S}{g_3 - i}}{\binom{T_3}{g_3}} \cdot (1 - (1 - P_{hit})^i)\right] - P_A\]
+Finally, $P_C$ accounts for the scenario that neither of the above occurred, and thus it is calculated as follows:
+\[ P_C = 1 - (P_A + P_B)\]
+Although this has ramifications on $E_{tx}$ as described above, our model otherwise remains unchanged. However, this opens up a new range of possible values for $S$, which is now constrained by $0 \leq S \leq T_3$ --- in 3.3, we shall see that this expanded range proves to be insightful.
+
+\subsection{3.2 Incorporating Idle Energy Costs}
+Another assumption made was that servers only incur an energy cost whenever actively processing a client's request. Although for larger CDNs this may effectively be true (since they are constantly performing computations),  we believe it is important to include an idle energy, even if it is minimal relative to the other forms of energy consumption in a CDN. This incorporates \cite{ulIslam2012}, which emphasizes the use of idle power as a potentially crucial aspect of CDN server utilization and energy consumption.
+
+As a result, we shall accordingly make a slight modification to $E_{server}$, the total server costs of our CDN, in order to allow for a variable idle energy usage per surrogate server. We set $P_{idle}$ to a minimal value of $0.1W$ per server, taking the other model parameters into account while assuming high server utilization and optimization, but this can be changed for experimentation as needed. This allows us to formulate the following new formula:
+\[E_{server} = S\cdot P_{idle}\cdot t + \sum_mBr_mP_{sr}\]
+Analogously to section 4.1, we maintain the rest of the original model, and replace the old calculation for $E_{server}$ with the above formula.
+
+\subsection{3.3 Results}
+After incorporating the new modeling of $E_{tx}$ using $P_A, P_B, P_C$, and accounting for idle energy as described in 4.2, we can observe some new trends in our data that differ from what we find in 2.5. Firstly, we examine the values of $S$ as $\{2^0, 2^1, \ldots, 2^8 = 256\}$. In the graphs that do not include it, we still checked higher values of $S$ up to 1000 to verify end behavior, however the crossover point was found far sooner. 
+\begin{figure}[!hbt]
+	\begin{center}
+		\includegraphics[width=8.1cm]{plots/new0.01.png}
+	\end{center}
+	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a popularity-based cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}	
+\label{new0.01}
+\end{figure}
+\begin{figure}[!hbt]
+	\begin{center}
+            \includegraphics[width=8.1cm]{plots/new0.001.png}
+	\end{center}
+	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a popularity-based cache policy, with a modify/request ratio of 0.001 and a cache rate of $40\%$.}	
+\label{new0.001}
+\end{figure}
+
+As we can see in Figures ~\ref{new0.01} and ~\ref{new0.001}, the energy consumption of our CDN has very different behavior once extrapolated to a greater concentration of surrogate servers. Notably, we see that after a certain quantity of surrogate servers, the normalized energy consumption of our CDN reaches a minimum, forming an "elbow" after which it is no longer energy-efficient to add more surrogates. We see that this varies by the ratio of modified to requested content --- as this ratio increases, the crossover point decreases. This inverse proportionality makes sense: when much of the content being requested is also being modified, synchronization energy begins to dominate the overall CDN energy consumption, since this is a costly (and no longer rare) operation.
+
+On the other hand, for CDNs with a very low $m_m/r_m$ ratio, it could prove beneficial to use a large amount of surrogate servers. For example, Spotify sees 100,000 song uploads per day while having users spend an hour a day listening to music --- with its 500 million listeners, this equates to approximately 10 billion songs per day \cite{spotifyUploads, headphonesaddict_2023}. Thus, Spotify has a $m_m/r_m$ ratio of $0.00001$, which means it would likely benefit from an even higher crossover point than represented in Figure ~\ref{new0.001}. This supports the reasoning behind our extension to the model in this section, in that modern, large-scale content providers like Spotify can benefit from having surrogate servers in all, or almost all, of the Tier 3 ISPs possible.
+
+\section{4. A Better Cache Policy}
+
+In addition to a limiting choice of model constraints, additional assumptions about the optimal cache policy as explained in \cite{biancoCDNs2017} do not necessarily hold. While \cite{biancoCDNs2017} asserts that Zipf with $\alpha = 0.8$ is an accurate caching policy for a variety of multimedia, content distributions on modern platforms like Tik Tok, Spotify, and YouTube all have different viewership patterns. This suggests that in some cases Zipf with $\alpha = 0.8$ may not be the best caching policy and alternate distributions could offer a better framework for CDN caching. 
+
+Since platforms like Tik Tok and Spotify contain more items with high popularity that spontaneously change in popularity by going viral overnight, the distribution of popularity may be less skewed than Zipf with $\alpha = 0.8$ might suggest. Therefore, using the Zipf distribution to determine cache allocation especially for short-form video content may not be as effective as for other types of multimedia. Additionally, since short-form video content requires larger amounts of storage space, efficient cache allocation modeling is even more crucial to ensure optimal performance of a CDN. 
 
 Instead of using Zipf with $\alpha = 0.8$, we build off of \cite{osmanthesis} and propose dynamically adjusting $\alpha$ based on different multimedia patterns. 
 
-\subsection{3.1 Shortfalls of Zipf}
+\subsection{4.1 Shortfalls of Zipf}
 
-Popular platforms like Spotify and Tik Tok have an extremely high viewership rates. Spotify, for example, has $489$ million monthly active users. Since the average Spotify user listens to approximately $720$ songs per month, we can estimate total monthly traffic as follows: 
+Popular platforms like Spotify and Tik Tok have an extremely high viewership rates. Spotify, for example, has $489$ million monthly active users \cite{headphonesaddict_2023}. Since the average Spotify user listens to approximately $720$ songs per month, we can estimate total monthly traffic as follows: 
 \[
 	489,000,000 \cdot 720 = 352.08 \texttt{ billion listens}
 \]  
@@ -299,14 +359,9 @@ As \cite{osmanthesis} suggests, different popularity distributions of cached con
 
 For example, Real TV viewing data indicates that when the diversity of video popularities is high, storing the few most popular videos in caches minimizes power consumption, with power savings of up to 72\%. However, when video popularities are similar, the best power efficiency is achieved by maintaining variable caches in the network. In the context of the Zipf distribution, similarly popular video similarities might mean increasing the value of $\alpha$ to ensure the first ranked item isn't assigned an extremely high probability of a hit.
 
+\subsection{4.2 Pareto Distribution}
 
-\subsection{3.2 Calculating Hit Probability}
-
-
-
-\subsection{3.3 Pareto Parameter vs. Hit Probability}
-
-In this section, we attempt to use a Pareto distribution with varying alpha values to demonstrate the impact on $P_{hit}$ calculations. For example, with an $\alpha = 1.16$ parameter, the Pareto principle (also known as the $80/20$ rule) would dictate that that 20\% of the content is responsible for 80\% of the views. This might be appropriate for certain types of content, such as movie streaming after a set of popular movie releases, which is why holding $/alpha = 0.8$ does not make sense. 
+In this section, we attempt to use a Pareto distribution with varying alpha values to demonstrate the impact on $P_{hit}$ calculations. For example, with an $\alpha = 1.16$ parameter, the Pareto principle (also known as the $80/20$ rule) would dictate that that 20\% of the content is responsible for 80\% of the views. This might be appropriate for certain types of content, such as movie streaming after a set of popular movie releases, which is why holding $\alpha = 0.8$ does not make sense. 
 
 The Pareto distribution is essentially a continuous version of the Zipf distribution. The probability mass function (PMF) of the Pareto distribution can be mathematically expressed as:
 
@@ -325,79 +380,45 @@ where $X$ is a random variable representing the size of a file, $x$ is the thres
 
 The graph of the cumulative distribution function (CDF) of the Pareto distribution very strongly mirrors the Zipf distribution because both distributions are monotonically decreasing and positively skewed. 
 
-\subsection{3.4 Pareto-based Energy Consumption (RESULTS)}
+\subsection{4.3 Pareto Energy Consumption}
+Similar to section 2.3, we can calculate the cache hit probability for content that is distributed according to the Pareto distribution via the Pareto CDF. Since Pareto is continuous rather than discrete, we must however normalize our calculation to exclude assignments that exceed our document count. As such, the hit probability is as follows (note that the Pareto parameter $x_m=1$ is fixed):
+\[ P_{hit}(\alpha, S_C, M) = \frac{1-\left(\frac{1}{MS_c}\right)^\alpha}{1-\left(\frac{1}{M}\right)^\alpha} \]
+\noindent which we can then use to graph
+\[ E_{tot}\left( P_{hit}(\alpha, 0.4, 1000), \ldots \right)\]
+\noindent as a function of $\alpha > 0$, keeping all else constant:
 
-\section{4. Adaptations to Larger CDNs}
-So far, the CDN energy consumption model we reference has been very useful for observing how to seek greener content delivery, alongside how using various cache policies affects energy usage. However, while working with the model, we also found some of our original assumptions and constraints to be unintuitive. In this section, we first examine the constraint on the amount of surrogates in our model, and then examine an important missing factor in our energy consumption calculations.
-
-\subsection{4.1 Relaxing Surrogate Constraints}
-Our above model makes the assumption that $S < T_2$ --- that there are fewer CDN surrogate servers than Tier 2 ISPs, and furthermore that there exists at most one surrogate per Tier 2 ISP. Reminding ourselves that in a realistic Internet hierarchy, Tier 2 ISPs are regional and national providers that operate both closer to clients than Tier 1 ISPs but further than Tier 3 ISPs, this assumption is unrealistic. If a large provider (e.g. TikTok or Spotify) wanted to rapidly deliver content, it would obviously want to have surrogates at as many Tier 3 ISPs as possible, regardless of whether they are connected to the same Tier 2 ISP. 
-
-Furthermore, recalling our goal of optimizing CDN energy consumption, the results we found in previous sections seem to illustrate that adding surrogate servers consistently contributes to decreased normalized energy consumption. We realized this clearly couldn't be true, both in our model and in reality --- once there exists a surrogate in each Tier 3 ISP, there is no way to lower the amount of hops from a client to a surrogate. The only potential benefit of having several surrogates in a single Tier 3 ISP is redundancy, which we do not seek here because surrogates only contain part of the existing content, and our primary server is assumed to be stable. 
-
-Given these two findings, we sought a way to update our constraint such that $S \leq T_3$ instead --- this follows from the fact that it could potentially be useful, and even energy-efficient, to continue adding surrogates until there is a surrogate at each Tier 3 ISP. As a result, we restructured our transmission energy consumption in order to allow for this new constraint. Namely, the probabilities $P_A, P_B, P_C$ of a client's closest hit being at a Tier 3, 2, or 1 ISP must be changed accordingly. 
-
-For the purpose of interpretability, we shall assume that new surrogates will be uniformly randomly assigned to a Tier 3 ISP. Of course, this is not an entirely accurate assumption to make, since some Tier 3 ISPs have far higher priority than others, such as ones in more in-demand geographic areas (New York instead of Montana) or ones with a greater service population. However, our model already makes similar implicit assumptions, such as the fact that clients and surrogates are evenly geographically distributed. Furthermore, our model focuses on differentiating costs \textit{between} ISP tiers, and not \textit{within} them, so we shall leave this part to Future Work.
-
-First, we calculate $P_A$ --- the probability that when a client requests a given piece of content, there exists a surrogate in the same Tier 3 ISP and it has that content. Here, we simply multiply the probability of a surrogate existing in that Tier 3 ISP ($\frac{S}{T_3}$ by uniformity) and the probability of a cache hit ($P_{hit}$, as calculated earlier). This gives us:
-\[P_A = \frac{S}{T_3} \cdot P_{hit}\]
-Next, we calculate $P_B$ --- the probability that the content could not be retrieved from a surrogate in the same Tier 3 ISP, but was able to be retrieved from a surrogate in the same Tier 2 ISP. First, we define a random variable for the amount of surrogates in a given Tier 2 ISP --- based on uniform selection without replacement, this gives us:
-\[S_2 \sim \textrm{HGeom}(S, T_3-s, g_3)\]
-Then, in order to formulate $P_B$, we summate over the amount of surrogates in a Tier 2 ISP where it is possible that a hit occurs --- this is 1 to $g_3$, since there cannot be a hit with 0 surrogates and there can also be at most 1 surrogate per Tier 3 ISP. Next, at each value in the summation, we calculate the probability of a hit for a Tier 2 ISP with that many surrogates --- this is $(1 - (1 - P_{hit})^i)$, since $(1 - P_{hit})^i$ defines the probability of none of the $i$ surrogates containing the requested content. Finally, we note that this summation includes scenario $A$, so we incorporate this to address overcounting:
-\[P_B = \sum^{g_3}_{i=1}[P(S_2 = i) \cdot (1 - (1 - P_{hit})^i)] - P_A\]
-\[P_B = \sum^{g_3}_{i=1}\left[\frac{\binom{S}{i}\binom{T_3-S}{g_3 - i}}{\binom{T_3}{g_3}} \cdot (1 - (1 - P_{hit})^i)\right] - P_A\]
-Finally, $P_C$ accounts for the scenario that neither of the above occurred, and thus it is calculated as follows:
-\[ P_C = 1 - (P_A + P_B)\]
-Although this has ramifications on $E_{tx}$ as described above, our model otherwise remains unchanged. However, this opens up a new range of possible values for $S$, which is now constrained by $0 \leq S \leq T_3$ --- in 4.3, we shall see that this expanded range proves to be insightful.
-
-\subsection{4.2 Incorporating Idle Energy Costs}
-Another assumption made was that servers only incur an energy cost whenever actively processing a client's request. Although for larger CDNs this may effectively be true (since they are constantly performing computations),  we believe it is important to include an idle energy, even if it is minimal relative to the other forms of energy consumption in a CDN. This incorporates \cite{ulIslam2012}, which emphasizes the use of idle power as a potentially crucial aspect of CDN server utilization and energy consumption.
-
-As a result, we shall accordingly make a slight modification to $E_{server}$, the total server costs of our CDN, in order to allow for a variable idle energy usage per surrogate server. We set $P_{idle}$ to a minimal value of $0.1W$ per server, taking the other model parameters into account while assuming high server utilization and optimization, but this can be changed for experimentation as needed. This allows us to formulate the following new formula:
-\[E_{server} = S\cdot P_{idle}\cdot t + \sum_mBr_mP_{sr}\]
-
-\subsection{4.3 Results}
-After incorporating the new modeling of $E_{tx}$ using $P_A, P_B, P_C$, and accounting for idle energy as described in 4.2, we can observe some new trends in our data that differ from what we find in 2.5. Firstly, we examine the values of $S$ as $\{2^0, 2^1, \ldots, 2^8 = 256\}$. In the graphs that do not include it, we still checked higher values of $S$ up to 1000 to verify end behavior, however the crossover point was found far sooner. 
-\begin{figure}[!hbt]
+\begin{figure}[h]
 	\begin{center}
-		\includegraphics[width=8.1cm]{plots/new0.01.png}
+		\includegraphics[width=8.1cm]{plots/pareto.png}
 	\end{center}
-	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a popularity-based cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}	
-\label{new0.01}
-\end{figure}
-\begin{figure}[!hbt]
-	\begin{center}
-            \includegraphics[width=8.1cm]{plots/new0.001.png}
-	\end{center}
-	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a popularity-based cache policy, with a modify/request ratio of 0.001 and a cache rate of $40\%$.}	
-\label{new0.001}
+	\caption{A graph of $E_{tot}$ for various $\alpha >0$ with $x_m = 1$.}	
+        \label{paretoalpha}
 \end{figure}
 
-As we can see in Figures ~\ref{new0.01} and ~\ref{new0.001}, the energy consumption of our CDN has very different behavior once extrapolated to a greater concentration of surrogate servers.
+We note that the results from Figure~\ref{paretoalpha} follow intuitively as well. Once the Pareto $\alpha$ parameter surpasses one, $P_{hit}$ is effectively one. Hence increasing $\alpha$ further yields highly marginal improvements. The spiky behavior of the graph is accounted for by our random Poisson sampling for requests and modifications, and the marginal normalized energy consumption delta between $\alpha \approx 0$ and $\alpha =5$ is accounted for by the fact that $S$ was already fixed at the optimal \textit{crossover point}, as discussed in the prior section.
 
 \section{5. Conclusions}
 
+Our paper proposes a new model for the energy-efficient use of CDNs that takes into account a more realistic representation of network topology and improved cache policies. Our contributions are threefold:  a revised energy model that accounts for idle server energy consumption and permits for a larger amount of surrogates, a strategy with accompanying code to determine the optimal number of surrogate servers for a CDN with specific characteristics, and a more in-depth analysis of cache policies and their relationship to various types of online content.
 
+Previous models are limited by their rigid network topology and the assumption that a Zipf distribution with parameter $\alpha=0.8$ accurately represents the popularity distribution of online content. By graphing the Pareto distribution with variable alpha, we were able to see that this parameter should be adjusted according to content type to accurately reflect the popularity distribution of online content. Additionally, the relaxation of surrogate constraints and the inclusion of idle energy costs improves previous energy consumption models, especially since previous models assume that adding surrogate servers linearly reduces energy consumption, which is inaccurate for a large amount of servers.
+
+Despite the widespread use of CDNs, there remains little research on how to optimize them for energy consumption. CDNs play a vital role in the delivery of web content, and their use has only increased as more and more users come online. Optimizing CDNs to minimize energy consumption can have a significant impact on reducing the carbon footprint of the Internet. Through the creation of this paper, we hope to inspire further research in this important area to help create a more sustainable future for the internet. 
 
 \section{6. Future Work}
-Although we have made significant improvements to existing models of energy consumption in CDNs, we recognize that our final model still provides a lack of clear strategic instruction, while also making numerous assumptions. These steps are intentional --- it is impossible to form a general analysis of CDNs, since they are widely used for services of varying size, data access patterns, and energy usage. As a result, we hope to have provided a more flexible model that can be used to guide initial paths to CDN energy conservation, based on generally-accepted cache policies and conservative model parameters. 
 
-One future area of work that could be synthesized productively with what we have presented is multi-integer linear programming (MILP). This can be used to 
+\begin{figure}[h]
+	\begin{center}
+		\includegraphics[width=8.1cm]{milp.png}
+	\end{center}
+	\caption{Optimal variable cache sizes for CDNs across nodes for different times of day, as computed by a MILP model.}	
+\end{figure}
 
-% andrew, section where we talk about our confusion with why their model only goes up to 
-% \subsection{x. Several surrogates within T2 ISPs}
-% \subsection{x. Crossover points / idle consumption}
-% need to do some research here
 
-% \section{x. Samples at Scale} (potentially)
+Although we have made significant improvements to existing models of energy consumption in CDNs, we recognize that our final model still provides a lack of clear strategic instruction, while also making numerous assumptions. These steps are intentional -- it is impossible to form a general analysis of CDNs, since they are widely used for services of varying size, data access patterns, and energy usage. As a result, we hope to have provided a more flexible model that can be used to guide initial paths to CDN energy conservation, based on generally-accepted cache policies and conservative model parameters.
 
-% \section{Adaptations to the current model}
-% in this section, we can talk about 1. having a crossover point where adding more servers is not energy effective, 2. how we would incorporate this into our model using an additional dependency on S in the server energy 
-% include a real world example analogous to the Youtube example in the current paper we are using --- use this ratio of r_m to m_m to calculate where the crossover point would be, and note that a similar strategy could be implemented by CDN users to optimize their energy consumption
+One future area of work that could be synthesized productively with what we have presented is multi-integer linear programming (MILP). MILP can be used to optimize the allocation of content and server resources by creating a linear programming model that simultaneously maximizes cache hit rates, minimizes energy consumption, and optimizes the allocation of server resources. This method could provide a more precise and accurate analysis of CDN energy consumption by taking into account more factors than our proposed model. However, MILP models are computationally expensive and require a large amount of data to achieve the best results.
 
-% \section{x. Future Work}
-
-% \section{x. References}
 
 \printbibliography
 
