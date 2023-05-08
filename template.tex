@@ -43,18 +43,18 @@
 
 \section{1. Introduction}
 
-During the semester, we extensively studied the fundamentals, implementations, and use cases of distributed systems. One of the topics we covered was replication, specifically for fault tolerance in a client-server chat application. We found applications of replication beyond fault tolerance for our chat application particularly interesting, with a focus on the benefits 
+Throughout the semester, we explored distributed system fundamentals, implementations, and use cases. One area that especially interested us was replication, since it is so fundamental to the performance and reliability of a variety of distributed systems. In our final project, we wanted to explore the various applications of replication beyond just fault-tolerance for a client-server chat application.
 
+Content delivery networks (CDNs) are a type of distributed system that utilizes caching techniques to improve the speed and reliability of content delivery. CDNs strategically place servers in different locations around the world, bringing content closer to users and minimizing the distance between clients and servers.
 
-The idea of exploring applications of replication beyond fault tolerance in a chat application was particularly interesting for us our interest. Given that replication is essential to the concept of distributed systems, we found it to be an intriguing topic. This paper intends to examine these applications of replication beyond fault tolerance and highlight the advantages they offer to companies and individuals.
+When a user requests content from a website that uses a CDN, the request is automatically routed to the nearest server in the network, which serves a cached copy of the content. By reducing the distance that data needs to travel over the network and optimizing content delivery, CDNs can help to minimize energy consumption and reduce the carbon footprint of content distribution platforms.
 
-One such application is content delivery networks (CDNs), which are distributed systems that offer a range of benefits beyond just faster content delivery. We demonstrate that CDNs can also be more energy-efficient, a crucial factor in a time where climate change is a pressing concern and major content distribution platforms are constantly expanding.
+CDNs are widely used by online platforms, serving trillions of requests globally. Therefore, even minor optimizations in CDN modeling can have significant ramifications for energy consumption. In this paper, we identify gaps in the literature regarding the energy efficiency of CDNs and make three significant contributions by doing the following:
 
-CDNs are widely used by online platforms globally and serve trillions of network effects across the globe. In this paper, we identify gaps in the literature regarding the energy efficiency of CDNs and make three significant contributions: 
 \begin{enumerate}
-    \item We more rigorously examine the choice of various probability distributions and parameters as cache policies for CDNs, by relating them to the various content categories available online today.
-    \item We redefine an existing model and its constraints to be more flexible and closely aligned with the energy consumption of modern CDNs.
-    \item We provide a strategy and code for modeling an appropriate amount of surrogate servers that should be used for a CDN with given characteristics --- namely, we do this by finding a \textit{crossover point} where a CDN's normalized energy consumption is at its minimum.
+    \item More rigorously examining the choice of cache policies for CDNs, relating them to the various content categories available online today.
+    \item Redefining an existing model and its constraints to be more closely aligned with the energy consumption of modern CDNs.
+    \item Providing a strategy along with code to model the optimal number of surrogate servers for a CDN with specific characteristics, identifying the "crossover point" where energy consumption is minimized.
 \end{enumerate}
 
 % brief explanation of what CDNs are and what they are typically used for
@@ -363,24 +363,21 @@ After incorporating the new modeling of $E_{tx}$ using $P_A, P_B, P_C$, and acco
 		\includegraphics[width=8.1cm]{plots/new0.01.png}
 	\end{center}
 	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a popularity-based cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}	
+\label{new0.01}
 \end{figure}
 \begin{figure}[!hbt]
 	\begin{center}
             \includegraphics[width=8.1cm]{plots/new0.001.png}
 	\end{center}
 	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a popularity-based cache policy, with a modify/request ratio of 0.001 and a cache rate of $40\%$.}	
+\label{new0.001}
 \end{figure}
 
-As we can see in Figure 6, the energy consumption of our CDN has very different behavior as 
+As we can see in Figures ~\ref{new0.01} and ~\ref{new0.001}, the energy consumption of our CDN has very different behavior once extrapolated to a greater concentration of surrogate servers.
 
 \section{5. Conclusions}
 
-Before developing our own adaptations and models for energy usage in CDNs, we explored models and methods that have already been explored. For one, we found work by ul Islam \& Pierson that details surrogate server energy utilization based on a variety of factors, but this model was less applicable to modern distributed systems, since it only considers requests made and not modifications made \cite{ulIslam2012}. We aimed
-\begin{enumerate}
-    \item Cite Bianco et al. heavily, noting other papers such as \href{https://link.springer.com/chapter/10.1007/978-3-642-32606-6\_6}{this link} as alternative methods but stating that we found this model to be the most recent, and also the most compelling --- we just want to make some slight extensions and modifications to it in the form of things we found not entirely satisfactory and also things that do not age well with current content formats and distribution rates
-    \item note that we were able to replicate the results of Bianco et al., except that we found a different P\_hit than they did (0.7847 instead of 0.82) by using the source they cited. The results remained qualitatively the same but quantitatively slightly different -- we continue using these strategies further
-    \item Speak a little bit to the code and
-\end{enumerate}
+
 
 \section{6. Future Work}
 Although we have made significant improvements to existing models of energy consumption in CDNs, we recognize that our final model still provides a lack of clear strategic instruction, while also making numerous assumptions. These steps are intentional --- it is impossible to form a general analysis of CDNs, since they are widely used for services of varying size, data access patterns, and energy usage. As a result, we hope to have provided a more flexible model that can be used to guide initial paths to CDN energy conservation, based on generally-accepted cache policies and conservative model parameters. 
