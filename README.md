@@ -1,3 +1,5 @@
+# CS 262 Final Project - Adarsh Hiremath, Andrew Palacci, and Artemas Radik
+
 This file contains code that calculates the optimal distribution of surrogate servers in a Content Delivery Network (CDN) to minimize energy consumption. It does so by modeling the energy consumption of the network based on various factors such as the number of surrogate servers, the size of the cache, and the hit rate of the content. The code also generates plots that show the relationship between the number of surrogate servers and the energy consumption of the network.
 
 ## Dependencies 
