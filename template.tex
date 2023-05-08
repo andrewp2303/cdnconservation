@@ -42,16 +42,21 @@
 %----------------------------------------------------------------------------------------
 
 \section{1. Introduction}
-Over the past semester, we've learned about the fundamentals of distributed systems, their implementations, and their uses. We were particularly interested exploring replication deeper, since it's so fundamental to the notion of what a distributed system is. For this paper specifically, we sought to find an application of the replication we learned that went beyond fault-tolerance, and provided additional benefits to the companies or individuals implementing them. One such application is content delivery networks (CDNs) --- distributed systems whose alternative benefits are twofold. We show that companies implementing CDNs for content delivery are not only able to deliver content faster (the primary goal) but also more energy-efficiently. In a time where the climate is clearly becoming more at risk yet major content distribution platforms are constantly growing, CDNs are a clear area where advancements in energy efficiency can (and should) be made.
 
-CDNs are an incredibly common data distribution tool that are used by the vast majority of global online platforms today. These are typically implemented as a distributed system in which 
+During the semester, we extensively studied the fundamentals, implementations, and use cases of distributed systems. One of the topics we covered was replication, specifically for fault tolerance in a client-server chat application. We found applications of replication beyond fault tolerance for our chat application particularly interesting, with a focus on the benefits 
 
-In this paper, we explore several gaps in the literature as to energy efficiency in CDNs, making three key contributions along the way:
+
+The idea of exploring applications of replication beyond fault tolerance in a chat application was particularly interesting for us our interest. Given that replication is essential to the concept of distributed systems, we found it to be an intriguing topic. This paper intends to examine these applications of replication beyond fault tolerance and highlight the advantages they offer to companies and individuals.
+
+One such application is content delivery networks (CDNs), which are distributed systems that offer a range of benefits beyond just faster content delivery. We demonstrate that CDNs can also be more energy-efficient, a crucial factor in a time where climate change is a pressing concern and major content distribution platforms are constantly expanding.
+
+CDNs are widely used by online platforms globally and serve trillions of network effects across the globe. In this paper, we identify gaps in the literature regarding the energy efficiency of CDNs and make three significant contributions: 
 \begin{enumerate}
     \item We more rigorously examine the choice of various probability distributions and parameters as cache policies for CDNs, by relating them to the various content categories available online today.
     \item We redefine an existing model and its constraints to be more flexible and closely aligned with the energy consumption of modern CDNs.
     \item We provide a strategy and code for modeling an appropriate amount of surrogate servers that should be used for a CDN with given characteristics --- namely, we do this by finding a \textit{crossover point} where a CDN's normalized energy consumption is at its minimum.
 \end{enumerate}
+
 % brief explanation of what CDNs are and what they are typically used for
 % the novel contributions of this paper are: A. fitting to different distributions B. new probability calculations C. a way to calculate
 
@@ -160,7 +165,6 @@ Note the following assumptions that have not yet already been stated:
 \end{enumerate}
 
 Note Table 1, which summarizes additional parameters that define our model.
-\begin{center}
 \begin{table}[h]
 \scriptsize
 \begin{tabular}{ |c|c|c| } 
@@ -208,30 +212,43 @@ Note Table 1, which summarizes additional parameters that define our model.
 \end{tabular}
 \caption{Parameter values for the existing version of our model.}
 \end{table}
-\end{center}
 \normalsize
+
+\subsection{2.5  Energy Consumption Modeling}
+Keeping all of these parameters in mind, we establish a cohesive model of the total energy consumed by a CDN in terms of the energy servers use to store data, the energy servers use to perform computations on data and retrieve it for clients, the energy required to keep data on the primary and surrogates synchronized, and finally the energy needed to transmit data to clients. This can be calculated as follows:
 \[E_{tot} = E_{storage} + E_{server} + E_{synch} + E_{tx}\]
+First, we must consider energy of storing the data across the primary server and all of its surrogates. This involves $n_m$ content replicas of size $B$ bytes each, requiring $P_{st}$ watts over a period of $t$ seconds:
 \[E_{storage} = \sum_mBn_mP_{st}t\]
+Then, we have $E_{server}$, the energy consumption taken by the computations 
 \[E_{server} = \sum_mBr_mP_{sr}\]
+Next, we have $E_{synch}$, the energy required to keep all of the surrogate servers up to date with the most recent content. For the purpose of this model, we assume that the primary is aware of which content is cached on each surrogate, and is thus able to efficiently propagate data as mentioned in the aforementioned assumption 5. Here, we incorporate the amount of modifications to content $m$ over the time period $t$, denoted $m_m$. We also touch $H_{ps} + 1$ routers and $H_{ps}$ links for the synchronization of each replica, and thus include these in our energy calculation below:
 \[E_{synch} = \sum_mBm_mn_m[E_r(H_{ps} + 1) + E_l(H_{ps})]\]
+Finally, in order to calculate our transmission energy, we first need to consider the three distinct cases in which content is transmitted. First is the case $A$ where a client's requested content is found on a surrogate in the same Tier 3 ISP, with probability:
 \[P_A = \frac{S}{T_2} \cdot \frac{1}{g_3} \cdot P_{hit}\]
+Then in case $B$, case $A$ is not satisfied but there is a surrogate in the same Tier 2 ISP that contains the desired content:
 \[P_B = \frac{S}{T_2} \cdot \left(1 - \frac{1}{g_3}\right) \cdot P_{hit}\]
+Finally, in case $C$, the core network (e.g. the primary server) is the closest server containing the requested content, and thus the data needs to be transmitted from the primary server all the way to the client:
 \[P_C = 1 - (P_A + P_B)\]
+Given these probabilities, we calculate a combined transmission energy, based on the amount of hops that need to be taken in each of the three cases $A, B, C$, and again the amount of routers and links that need to be touched in the process:
 \begin{multline*}
     E_{tx} = P_A\sum_mBr_m[E_r(H^A_{sd} + 1) + E_l(H^A_{sd})] \\
       + P_B\sum_mBr_m[E_r(H^B_{sd} + 1) + E_l(H^B_{sd})] \\
       + P_C\sum_mBr_m[E_r(H^C_{sd} + 1) + E_l(H^C_{sd})] \\
 \end{multline*}
 
-\subsection{2.5 Results}
+\subsection{2.6 Results and Discussion}
 \begin{figure}[!hbt]
 	\begin{center}
 		\includegraphics[width=8.1cm]{plots/sc40ratio0.01uniform.png}
-            \includegraphics[width=8.1cm]{plots/sc40ratio0.01zipf.png}
 	\end{center}
-	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a Uniform (top) and popularity-based (bottom) cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}	
+	\caption{$E_{tot}$ and $E_{tot - synch}$ for a Uniform cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}	
 \end{figure}
-
+\begin{figure}[!hbt]
+	\begin{center}
+		\includegraphics[width=8.1cm]{plots/sc40ratio0.01zipf.png}
+	\end{center}
+	\caption{$E_{tot}$ and $E_{tot - synch}$ for popularity-based cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}	
+\end{figure}
 
 \section{3. A Better Cache Policy}
 
@@ -338,16 +355,23 @@ Another assumption made was that servers only incur an energy cost whenever acti
 
 As a result, we shall accordingly make a slight modification to $E_{server}$, the total server costs of our CDN, in order to allow for a variable idle energy usage per surrogate server. We set $P_{idle}$ to a minimal value of $0.1W$ per server, taking the other model parameters into account while assuming high server utilization and optimization, but this can be changed for experimentation as needed. This allows us to formulate the following new formula:
 \[E_{server} = S\cdot P_{idle}\cdot t + \sum_mBr_mP_{sr}\]
+
 \subsection{4.3 Results}
 After incorporating the new modeling of $E_{tx}$ using $P_A, P_B, P_C$, and accounting for idle energy as described in 4.2, we can observe some new trends in our data that differ from what we find in 2.5. Firstly, we examine the values of $S$ as $\{2^0, 2^1, \ldots, 2^8 = 256\}$. In the graphs that do not include it, we still checked higher values of $S$ up to 1000 to verify end behavior, however the crossover point was found far sooner. 
 \begin{figure}[!hbt]
 	\begin{center}
 		\includegraphics[width=8.1cm]{plots/new0.01.png}
+	\end{center}
+	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a popularity-based cache policy, with a modify/request ratio of $0.01$ and a cache rate of $40\%$.}	
+\end{figure}
+\begin{figure}[!hbt]
+	\begin{center}
             \includegraphics[width=8.1cm]{plots/new0.001.png}
 	\end{center}
-	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a popularity-based cache policy, with a modify/request ratio of $0.01$ (top) or 0.001 (bottom) and a cache rate of $40\%$.}	
+	\caption{Graphs of $E_{tot}$ and $E_{tot - synch}$ for a popularity-based cache policy, with a modify/request ratio of 0.001 and a cache rate of $40\%$.}	
 \end{figure}
 
+As we can see in Figure 6, the energy consumption of our CDN has very different behavior as 
 
 \section{5. Conclusions}
 
