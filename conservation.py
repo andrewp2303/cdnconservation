@@ -9,17 +9,23 @@ from scipy.special import comb
 G = np.random.default_rng()
 
 class Opt:
-    ''' Class for all variables needed for energy consumption calculation'''
+    ''' 
+    Class for all variables needed for energy consumption calculation.
+
+    *Note*: this can be modified to include more accurate data, if looking
+    to model how content on a specific site could be optimally distributed 
+    using surrogate servers in a CDN.
+    '''
     def __init__(self, S):
 
-        # method used (old, ours)
-        self.method = 'ours'
+        # model used (old, new)
+        self.model = 'old'
 
         # variables (set these first)
         self.S = S    		# number of surrogate servers
         self.S_c = 0.4      # % cache size (surrogate storage capacity) (0.2, 0.4, 0.5)
         self.m_m = 10              # modifications to content m (10, 100)
-        self.r_m = 1000              # requests for content m (100, 1000, 10000)
+        self.r_m = 10000              # requests for content m (100, 1000, 10000)
         self.P_hit = 0.7847          # hit rate for content m (0.7847)
 
         # constants / dependent variables
@@ -40,19 +46,6 @@ class Opt:
         self.E_r = 1.2e-8           # router energy consumption per bit
         self.E_l = 1.48e-9          # link energy consumption per bit
         self.E_sr = 2.81e-7         # server energy consumption per bit
-
-# def set_opt(S):
-#     ''' Collects command line args and returns all needed information'''
-#     if len(sys.argv) == 6:
-#         S_c = float(sys.argv[1])
-#         m_m = int(sys.argv[2])
-#         r_m = int(sys.argv[3])
-#         P_hit = float(sys.argv[4])
-#         opt = Opt(S, S_c, r_m, m_m, P_hit)
-#         return opt
-#     else:
-#         print('Usage: python conservation.py <S_c> <r_m> <m_m> <P_hit>')
-#         sys.exit(1)
 
 def E_storage(opt):
     ''' Calculates CDN storage energy consumption, in Joules'''
@@ -95,7 +88,7 @@ def E_tran(opt):
 
     # probability of earliest hit occurring at Tier 3, 2, 1 respectively
 
-    if opt.method == 'ours':
+    if opt.model == 'new':
         P_A = (opt.S / opt.T_3) * opt.P_hit
         P_B = sum([hgeom_pmf(i, opt.S, opt.T_3 - opt.S, opt.g_3) * (1 - (1 - opt.P_hit) ** i) for i in range(1, opt.g_3 + 1)]) - P_A
         P_C = 1 - (P_A + P_B)
@@ -123,7 +116,8 @@ def main():
 
     # values of surrogate servers to test on
     # S_lst = [1, 2, 3, 5, 8, 10, 20, 50, 100, 500, 1000]
-    S_lst = [1, 2, 3, 5, 8, 10, 20, 50, 100, 200]
+    # S_lst = [1, 2, 3, 5, 8, 10, 20, 50, 100, 200]
+    S_lst = [2 ** i for i in range(10)]
 
     E_tot_lst = []
     E_syncless_lst = []
@@ -156,8 +150,8 @@ def main():
 
     plt.title(f'm_m/r_m = {(opt.m_m / opt.r_m):.3f}')
     plt.legend()
-    
-    if len(sys.argv) == 1:
+
+    if len(sys.argv) == 2:
         plt.savefig(os.path.join("plots", sys.argv[1]))
     else:
         print(f"Usage: python conservation.py <out.png>")
