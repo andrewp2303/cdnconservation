@@ -19,13 +19,13 @@ class Opt:
     def __init__(self, S):
 
         # model used (old, new)
-        self.model = 'old'
+        self.model = 'new'
 
         # variables (set these first)
         self.S = S    		# number of surrogate servers
         self.S_c = 0.4      # % cache size (surrogate storage capacity) (0.2, 0.4, 0.5)
-        self.m_m = 10              # modifications to content m (10, 100)
-        self.r_m = 10000              # requests for content m (100, 1000, 10000)
+        self.m_m = 100              # modifications to content m (10, 100)
+        self.r_m = 100000              # requests for content m (100, 1000, 10000)
         self.P_hit = 0.7847          # hit rate for content m (0.7847)
 
         # constants / dependent variables
@@ -46,6 +46,7 @@ class Opt:
         self.E_r = 1.2e-8           # router energy consumption per bit
         self.E_l = 1.48e-9          # link energy consumption per bit
         self.E_sr = 2.81e-7         # server energy consumption per bit
+        self.P_idle = 0.1   # idle power consumption per surrogate per second
 
 def E_storage(opt):
     ''' Calculates CDN storage energy consumption, in Joules'''
@@ -62,6 +63,7 @@ def E_server(opt):
     for _ in range(opt.M):
         r_m = G.poisson(opt.r_m)
         totJ += opt.B * r_m * opt.E_sr
+    totJ += opt.P_idle * opt.S * opt.t
     return totJ
 
 def E_synch(opt):
@@ -116,8 +118,8 @@ def main():
 
     # values of surrogate servers to test on
     # S_lst = [1, 2, 3, 5, 8, 10, 20, 50, 100, 500, 1000]
-    # S_lst = [1, 2, 3, 5, 8, 10, 20, 50, 100, 200]
-    S_lst = [2 ** i for i in range(10)]
+    # S_lst = [1, 2, 3, 5, 8, 10, 20]
+    S_lst = [2 ** i for i in range(10)] + [1000]
 
     E_tot_lst = []
     E_syncless_lst = []
