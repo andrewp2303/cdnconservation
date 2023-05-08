@@ -22,6 +22,7 @@
 \ProvidesClass{LTJournalArticle}[2023/02/07 LaTeX Templates Journal Article Class v2.0]
 
 \usepackage{etoolbox} % Required for conditional logic and easily changing commands
+\usepackage{hyperref}
 
 \newtoggle{unnumberedsections} % Create toggle for a class option
 \settoggle{unnumberedsections}{false} % Default value for the class option
